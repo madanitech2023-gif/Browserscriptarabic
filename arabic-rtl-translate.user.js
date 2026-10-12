@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name ترجمة عربي إجباري + RTL 80% - بدون timeouts
 // @namespace https://viayoo.com/
-// @version 8.3
+// @version 8.4
 // @description يترجم للعربي بـ 3 API: Google ثم MyMemory ثم Libre - بدون timeouts
 // @author You
 // @match *://*/*
@@ -17,7 +17,25 @@
   'use strict';
 
   const ARABIC_PATTERN = /[\u0600-\u06FF]/;
-  const EXCLUDED_TAGS = /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA|CODE|PRE|OPTION|SVG|BUTTON)$/i;
+  const LATIN_PATTERN = /[A-Za-z]/;
+  const EXCLUDED_TAGS = /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA|CODE|PRE|OPTION|SVG)$/i;
+  const loggedProviderErrors = new Set();
+  const observedShadowRoots = new WeakSet();
+  const TRANSLATION_CONCURRENCY = 4;
+
+  const RTL_STYLES = `
+    :host, * {
+      direction: rtl !important;
+      text-align: start !important;
+      unicode-bidi: plaintext !important;
+    }
+
+    pre, code, input, textarea, [contenteditable] {
+      direction: ltr !important;
+      text-align: left !important;
+      unicode-bidi: normal !important;
+    }
+  `;
 
   function setRTL() {
     const root = document.documentElement;
@@ -60,7 +78,8 @@
   function shouldSkipNode(node) {
     if (!node || node.nodeType !== Node.TEXT_NODE) return true;
     const text = node.textContent || '';
-    if (!text.trim() || text.trim().length < 4) return true;
+    if (!text.trim()) return true;
+    if (!LATIN_PATTERN.test(text)) return true;
     if (ARABIC_PATTERN.test(text)) return true;
 
     const parent = node.parentElement;
@@ -165,7 +184,7 @@
   }
 
   async function translateText(text) {
-    if (!text || !text.trim() || text.trim().length < 4 || ARABIC_PATTERN.test(text)) {
+    if (!text || !text.trim() || !LATIN_PATTERN.test(text) || ARABIC_PATTERN.test(text)) {
       return text;
     }
 
@@ -176,7 +195,11 @@
           return translated.trim();
         }
       } catch (error) {
-        // Ignore provider errors and continue to the next provider.
+        const providerName = provider.name;
+        if (!loggedProviderErrors.has(providerName)) {
+          loggedProviderErrors.add(providerName);
+          console.warn(`Arabic translation: ${providerName} failed.`, error);
+        }
       }
     }
 
@@ -188,30 +211,63 @@
 
     const original = node.textContent || '';
     const translated = await translateText(original);
-    if (translated && translated !== original) {
+    if (node.textContent === original && translated && translated !== original) {
       node.textContent = translated;
     }
+  }
+
+  function addShadowRootStyles(root) {
+    if (root.querySelector('style[data-arabic-rtl]')) return;
+    const style = document.createElement('style');
+    style.setAttribute('data-arabic-rtl', '');
+    style.textContent = RTL_STYLES;
+    root.appendChild(style);
+  }
+
+  function findOpenShadowRoots(root, roots = []) {
+    if (!root || !root.querySelectorAll) return roots;
+    const elements = root.querySelectorAll('*');
+    for (const element of elements) {
+      if (element.shadowRoot) {
+        const shadowRoot = element.shadowRoot;
+        roots.push(shadowRoot);
+        if (!observedShadowRoots.has(shadowRoot)) {
+          observedShadowRoots.add(shadowRoot);
+          addShadowRootStyles(shadowRoot);
+          observer.observe(shadowRoot, {
+            childList: true,
+            subtree: true,
+            characterData: true
+          });
+        }
+        findOpenShadowRoots(shadowRoot, roots);
+      }
+    }
+    return roots;
   }
 
   async function walkTextNodes(root) {
     if (!root || !root.querySelectorAll) return;
 
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-      acceptNode(node) {
-        if (shouldSkipNode(node)) return NodeFilter.FILTER_REJECT;
-        return NodeFilter.FILTER_ACCEPT;
-      }
-    });
-
+    const roots = [root, ...findOpenShadowRoots(root)];
     const nodes = [];
-    let current = walker.nextNode();
-    while (current) {
-      nodes.push(current);
-      current = walker.nextNode();
+    for (const textRoot of roots) {
+      const walker = document.createTreeWalker(textRoot, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          if (shouldSkipNode(node)) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+
+      let current = walker.nextNode();
+      while (current) {
+        nodes.push(current);
+        current = walker.nextNode();
+      }
     }
 
-    for (const node of nodes) {
-      await processNode(node);
+    for (let i = 0; i < nodes.length; i += TRANSLATION_CONCURRENCY) {
+      await Promise.all(nodes.slice(i, i + TRANSLATION_CONCURRENCY).map(processNode));
     }
   }
 
@@ -223,6 +279,7 @@
     setTimeout(async () => {
       updateQueued = false;
       if (document.body) {
+        findOpenShadowRoots(document.documentElement);
         await walkTextNodes(document.body);
       }
     }, 150);

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Android Auto Arabic RTL Preview</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Arial, sans-serif;
+      color: #202124;
+      background: #f8fafd;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.7rem, 4vw, 2.4rem);
+    }
+
+    .intro {
+      margin: 0 0 28px;
+      color: #5f6368;
+      line-height: 1.6;
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .panel {
+      overflow: hidden;
+      border: 1px solid #dadce0;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgb(60 64 67 / 10%);
+    }
+
+    .panel-heading {
+      margin: 0;
+      padding: 16px 20px;
+      border-bottom: 1px solid #e8eaed;
+      font-size: 1.1rem;
+    }
+
+    .content {
+      padding: 20px;
+      line-height: 1.8;
+    }
+
+    .content h3 {
+      margin: 0 0 12px;
+      font-size: 1.35rem;
+      line-height: 1.5;
+    }
+
+    .content p {
+      margin: 0 0 16px;
+    }
+
+    .sample-nav {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e8eaed;
+    }
+
+    .brand {
+      margin-inline-end: auto;
+      font-weight: 700;
+    }
+
+    .nav-link {
+      color: #1a73e8;
+      text-decoration: none;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 9px 16px;
+      border: 0;
+      border-radius: 20px;
+      background: #1a73e8;
+      color: #fff;
+      font: inherit;
+      text-decoration: none;
+    }
+
+    .note {
+      margin-top: 24px;
+      color: #5f6368;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 700px) {
+      body {
+        padding: 22px 14px;
+      }
+
+      .comparison {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Android Auto: Arabic + RTL preview</h1>
+    <p class="intro">A static before-and-after preview of the English page content and its Arabic translation with right-to-left layout.</p>
+  </header>
+
+  <main class="comparison">
+    <section class="panel" aria-labelledby="english-heading">
+      <h2 class="panel-heading" id="english-heading">Original · English · LTR</h2>
+      <div class="content" lang="en" dir="ltr">
+        <nav class="sample-nav" aria-label="Example navigation">
+          <span class="brand">Android Auto</span>
+          <a class="nav-link" href="#english-content">Features</a>
+          <a class="button" href="#english-content">Learn more</a>
+        </nav>
+        <div id="english-content">
+          <h3>Gemini is coming to Android Auto</h3>
+          <p>Gemini is being integrated directly into Android Auto to replace the classic Google Assistant experience.</p>
+          <p>Set Gemini as your primary assistant on your Android phone. Once your account and device are eligible, Gemini will become your hands-free assistant when you connect your phone to your car.</p>
+          <p>Say “Hey Google” followed by your question or command for help with navigation, messages, or music.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="arabic-heading">
+      <h2 class="panel-heading" id="arabic-heading">Updated · Arabic · RTL</h2>
+      <div class="content" lang="ar" dir="rtl">
+        <nav class="sample-nav" aria-label="التنقل النموذجي">
+          <span class="brand">Android Auto</span>
+          <a class="nav-link" href="#arabic-content">الميزات</a>
+          <a class="button" href="#arabic-content">مزيد من المعلومات</a>
+        </nav>
+        <div id="arabic-content">
+          <h3>جيميني قادم إلى Android Auto</h3>
+          <p>يجري دمج جيميني مباشرةً في Android Auto ليحل محل تجربة مساعد Google التقليدي.</p>
+          <p>عيّن جيميني مساعدًا أساسيًا على هاتف Android. عندما يصبح حسابك وجهازك مؤهلين، سيعمل جيميني كمساعد صوتي من دون استخدام اليدين عند توصيل هاتفك بسيارتك.</p>
+          <p>قل «Hey Google» ثم اطرح سؤالك أو اذكر طلبك للحصول على مساعدة في التنقل أو الرسائل أو الموسيقى.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <p class="note">This file is a visual preview only; it does not load or modify the live Android Auto website.</p>
+</body>
+</html>
